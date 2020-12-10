@@ -15,7 +15,17 @@ def part_1(arr: List[int]):
 
 
 def part_2(arr: List[int]):
-    pass
+    n = max(arr)
+    res = [0 for _ in range(n + 1)]
+    res[0] = 1
+
+    for i in range(n + 1):
+        if i not in arr:
+            continue
+        for j in range(i - 3, i):
+            if j >= 0:
+                res[i] += res[j]
+    return res[n]
 
 
 if __name__ == "__main__":
@@ -25,3 +35,4 @@ if __name__ == "__main__":
     adapters = [int(n) for n in adapters]
 
     print(part_1(adapters))
+    print(part_2(adapters))
