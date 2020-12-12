@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 from typing import List
 
@@ -45,7 +46,40 @@ def part_1(instructions: List[str]):
 
 
 def part_2(instructions: List[str]):
-    pass
+    x, y = 0, 0
+    wx, wy = 10, 1
+    for i in instructions:
+        a = i[0]
+        v = int(i[1:])
+        if a == "F":
+            x += wx * v
+            y += wy * v
+        else:
+            wx, wy = move_waypoint(wx, wy, a, v)
+    return abs(x) + abs(y)
+
+
+def move_waypoint(wx, wy, action, value):
+    if action == "N":
+        wy += value
+    elif action == "S":
+        wy -= value
+    elif action == "E":
+        wx += value
+    elif action == "W":
+        wx -= value
+    elif action == "L":
+        wx, wy = rotate(wx, wy, value)
+    elif action == "R":
+        wx, wy = rotate(wx, wy, -value)
+    return wx, wy
+
+
+def rotate(x, y, degrees):
+    degrees = math.radians(degrees)
+    nx = x * math.cos(degrees) - y * math.sin(degrees)
+    ny = x * math.sin(degrees) + y * math.cos(degrees)
+    return round(nx), round(ny)
 
 
 if __name__ == "__main__":
