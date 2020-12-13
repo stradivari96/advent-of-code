@@ -20,9 +20,15 @@ def part_1(min_time: int, busses: List[str]):
 
 def part_2(busses: List[str]):
     busses = [int(b) if b != "x" else "x" for b in busses]
-    return "https://www.wolframalpha.com/input/?i=0+%3D+" + "+%3D+".join(
-        [f"((n+%2B+{i})+mod+{n})" for i, n in enumerate(busses) if n != "x"]
-    )
+
+    jump = i = busses[0]
+    for idx, b in enumerate(busses):
+        if b == "x" or idx == 0:
+            continue
+        while (i + idx) % b != 0:
+            i += jump
+        jump *= b
+    return i
 
 
 if __name__ == "__main__":
