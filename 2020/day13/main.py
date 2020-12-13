@@ -18,8 +18,11 @@ def part_1(min_time: int, busses: List[str]):
     return result * (get_first_bus(min_time, result) - min_time)
 
 
-def part_2(min_time: int, busses: List[str]):
-    pass
+def part_2(busses: List[str]):
+    busses = [int(b) if b != "x" else "x" for b in busses]
+    return "https://www.wolframalpha.com/input/?i=0+%3D+" + "+%3D+".join(
+        [f"((n+%2B+{i})+mod+{n})" for i, n in enumerate(busses) if n != "x"]
+    )
 
 
 if __name__ == "__main__":
@@ -30,4 +33,4 @@ if __name__ == "__main__":
     all_busses = data[1].split(",")
 
     print(part_1(earliest, all_busses))
-    print(part_2(earliest, all_busses))
+    print(part_2(all_busses))
