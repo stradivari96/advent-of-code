@@ -1,6 +1,3 @@
-from typing import List
-
-
 def parse_data(data):
     data = data.split("\n")
     data = [i.split(" = ") for i in data]
@@ -31,7 +28,23 @@ def part_1(data):
 
 
 def part_2(data):
-    pass
+    mask = None
+    mem = {}
+    for left, right in data:
+        if left == "mask":
+            mask = right
+        else:
+            left = bin(left)[2:].zfill(len(mask))
+            for i, m in enumerate(mask):
+                if m != "0":
+                    left = left[:i] + m + left[i + 1 :]
+            left = left.replace("X", "{}")
+            x_count = mask.count("X")
+            for f in range(2 ** x_count):
+                addr = left.format(*bin(f)[2:].zfill(x_count))
+                addr = int(addr, 2)
+                mem[addr] = int(right)
+    return sum(mem.values())
 
 
 if __name__ == "__main__":
