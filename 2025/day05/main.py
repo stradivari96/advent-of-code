@@ -1,6 +1,4 @@
 import typing
-import functools
-import math
 
 class Range(typing.NamedTuple):
     low: int
