@@ -41,9 +41,9 @@ def part_2(problem: Problem, heap):
             y_start, y_end = sorted((u_y, v_y))
             # all edges are either vertical or horizontal!!
             if x_end <= x1 or x_start >= x2:
-                continue  # to the left or to the right
+                continue  # to the left or to the right of the rectangle
             if y_end <= y1 or y_start >= y2:
-                continue  # above or below
+                continue  # above or below the rectangle
             # intersects
             return False
         return True
