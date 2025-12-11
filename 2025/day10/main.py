@@ -1,6 +1,6 @@
-import itertools
 import typing
 import re
+from ortools.sat.python import cp_model
 
 class Machine(typing.NamedTuple):
     lights: str
@@ -18,9 +18,9 @@ def main():
     for line in lines:
         match = regex.match(line)
         lights_str, button_wiring_str, joltage_requirements_str = match.groups()
-        lights = lights_str.strip("[]")
+        lights = [c == '#' for c in lights_str.strip("[]")]
         button_wiring = [tuple(int(num) for num in t.strip('()').split(',')) for t in button_wiring_str.split(' ')]
-        joltage_requirements = [list(int(num) for num in joltage_requirements_str.strip('{}').split(','))]
+        joltage_requirements = list(int(num) for num in joltage_requirements_str.strip('{}').split(','))
         machine = Machine(
             lights=lights,
             button_wiring=button_wiring,
@@ -28,50 +28,56 @@ def main():
         )
         machines.append(machine)
     problem = Problem(machines=machines)
-    print(problem)
-    part1_result, heap = part_1(problem)
-    print(part1_result)
-    print(part_2(problem, heap))
+    print(part_1(problem))
+    print(part_2(problem))
 
 
 def part_1(problem: Problem):
-    largest_area = 0
-    heap = []
-    for (x1, y1), (x2, y2) in itertools.combinations(problem.tiles, 2):
-        area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
-        if area > largest_area:
-            largest_area = area
-        heapq.heappush(heap, (-area, (x1, y1), (x2, y2)))
-    return largest_area, heap
+    
+    # bfs problem, minimize number of button presses to achieve desired light configuration
+    total = 0
+    for machine in problem.machines:
+        initial_state = tuple(False for _ in machine.lights)
+        target_state = tuple(machine.lights)
+        queue = [(initial_state, 0)]
+        visited = set()
+        while queue:
+            state, presses = queue.pop(0)
+            if state == target_state:
+                total += presses
+                break
+            for button in machine.button_wiring:
+                new_state = list(state)
+                for idx in button:
+                    new_state[idx] = not new_state[idx]
+                new_state_tuple = tuple(new_state)
+                if new_state_tuple not in visited:
+                    visited.add(new_state_tuple)
+                    queue.append((new_state_tuple, presses + 1))
+    return total
 
 
-def part_2(problem: Problem, heap):
-    poly_loop = problem.tiles + [problem.tiles[0]]
-    edges = list(zip(poly_loop, poly_loop[1:]))
-
-    def is_valid_rectangle(x1, y1, x2, y2):
-        x1, x2 = sorted((x1, x2))
-        y1, y2 = sorted((y1, y2))
-
-        for (u_x, u_y), (v_x, v_y) in edges:
-            x_start, x_end = sorted((u_x, v_x))
-            y_start, y_end = sorted((u_y, v_y))
-            # all edges are either vertical or horizontal!!
-            if x_end <= x1 or x_start >= x2:
-                continue  # to the left or to the right of the rectangle
-            if y_end <= y1 or y_start >= y2:
-                continue  # above or below the rectangle
-            # intersects
-            return False
-        return True
-
-    # Iterate through rectangles from largest to smallest
-    while heap:
-        area, (x1, y1), (x2, y2) = heapq.heappop(heap)
-        
-        if is_valid_rectangle(x1, y1, x2, y2):
-            return -area
-
+def part_2(problem: Problem):
+    total = 0
+    for machine in problem.machines:
+        model = cp_model.CpModel()
+        button_presses = [
+            model.NewIntVar(0, cp_model.INT32_MAX, f"button_{i}_presses")
+            for i in range(len(machine.button_wiring))
+        ]
+        for i in range(len(machine.joltage_requirements)):
+            buttons = [
+                button_presses[j]
+                for j, wiring in enumerate(machine.button_wiring)
+                if i in wiring
+            ]
+            model.Add(machine.joltage_requirements[i] == sum(buttons))
+        model.Minimize(sum(button_presses))
+        solver = cp_model.CpSolver()
+        status = solver.Solve(model)
+        if status == cp_model.OPTIMAL:
+            total += solver.Value(sum(button_presses))
+    return total
 
 
 if __name__ == "__main__":
